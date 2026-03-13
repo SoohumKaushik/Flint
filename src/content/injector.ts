@@ -25,17 +25,18 @@ export function mountContextMeter(): HTMLDivElement {
 export function mountPromptAnalyzer(): HTMLDivElement {
   const container = createContainer("flint-prompt-analyzer");
   container.style.cssText =
-    "position:fixed;bottom:100px;right:24px;z-index:99998;";
+    "position:fixed;bottom:120px;right:24px;z-index:99998;";
   document.body.appendChild(container);
   return container;
 }
 
 /** Find the main textarea / contenteditable on claude.ai */
 export function findTextarea(): HTMLElement | null {
-  // Claude uses a contenteditable div with class fieldset or a ProseMirror editor
   return (
-    document.querySelector<HTMLElement>('[contenteditable="true"]') ||
-    document.querySelector<HTMLElement>("textarea") ||
+    document.querySelector('.ProseMirror[contenteditable="true"]') as HTMLElement ||
+    document.querySelector('[data-placeholder][contenteditable="true"]') as HTMLElement ||
+    document.querySelector('div[contenteditable="true"]') as HTMLElement ||
+    document.querySelector('textarea') as HTMLElement ||
     null
   );
 }

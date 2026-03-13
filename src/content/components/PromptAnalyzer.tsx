@@ -22,22 +22,41 @@ const PromptAnalyzer: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Poll for textarea changes since contenteditable events are unreliable
-    const interval = setInterval(checkInput, 800);
+    let el: HTMLElement | null = null;
+    let retries = 0;
 
-    // Also listen for input events
-    const handler = () => checkInput();
-    const el = findTextarea();
-    if (el) {
-      el.addEventListener("input", handler);
-      el.addEventListener("keyup", handler);
-    }
+    const attachListeners = () => {
+      const found = findTextarea();
+      if (found && found !== el) {
+        if (el) {
+          el.removeEventListener("input", checkInput);
+          el.removeEventListener("keyup", checkInput);
+        }
+        el = found;
+        el.addEventListener("input", checkInput);
+        el.addEventListener("keyup", checkInput);
+      }
+      if (!found && retries < 20) {
+        retries++;
+        setTimeout(attachListeners, 500);
+      }
+    };
+
+    const interval = setInterval(checkInput, 600);
+    attachListeners();
+
+    const observer = new MutationObserver(() => {
+      attachListeners();
+      checkInput();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       clearInterval(interval);
+      observer.disconnect();
       if (el) {
-        el.removeEventListener("input", handler);
-        el.removeEventListener("keyup", handler);
+        el.removeEventListener("input", checkInput);
+        el.removeEventListener("keyup", checkInput);
       }
     };
   }, [checkInput]);
