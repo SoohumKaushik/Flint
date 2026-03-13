@@ -12,7 +12,7 @@ const PromptAnalyzer: React.FC = () => {
   const checkInput = useCallback(() => {
     const text = getInputText().trim();
     setCurrentPrompt(text);
-    if (text.length >= 20) {
+    if (text.length >= 10) {
       setVisible(true);
     } else {
       setVisible(false);
