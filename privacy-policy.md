@@ -24,6 +24,8 @@ Flint stores your usage statistics (number of prompts analyzed, scores) locally 
 
 ## Contact
 For any privacy questions, contact: duke.soohum@gmail.com
+Or open an issue: https://github.com/SoohumKaushik/Flint/issues
 
 ## Changes
-We'll update this policy if anything changes. The latest version is always at getflint.dev/privacy.
+We'll update this policy if anything changes. The latest version is always at:
+https://soohumkaushik.github.io/Flint/privacy.html
