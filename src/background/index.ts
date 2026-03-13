@@ -1,5 +1,3 @@
-const FLINT_API_URL = "https://flint-backend-two.vercel.app/api/analyze";
-
 // Daily reset alarm
 chrome.alarms.create("daily-reset", {
   periodInMinutes: 1440,
@@ -33,66 +31,52 @@ chrome.action.onClicked.addListener((tab) => {
 
 // Message handler
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.type === "ANALYZE_PROMPT") {
-    handleAnalyze(message.payload).then(sendResponse);
-    return true; // keep channel open for async
-  }
-
-  if (message.type === "IMPROVE_PROMPT") {
-    handleAnalyze(message.payload).then(sendResponse);
-    return true;
-  }
-
   if (message.type === "TRACK_USAGE") {
     handleTrackUsage(message.payload).then(sendResponse);
-    return true;
+    return true; // keep channel open for async
   }
 });
 
-async function handleAnalyze(payload: {
-  prompt: string;
-  systemPrompt: string;
-}): Promise<{ data?: unknown; error?: string }> {
-  try {
-    const res = await fetch(FLINT_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: payload.prompt }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      return {
-        error: (err as { error?: string }).error || `API error (${res.status})`,
-      };
-    }
-
-    const data = await res.json();
-
-    if (data.error) {
-      return { error: data.error };
-    }
-
-    // Save to history
+async function handleTrackUsage(payload: {
+  prompt?: string;
+  score?: number;
+  tip?: string;
+  improved?: string | null;
+  sessionId?: string;
+}): Promise<{ success: boolean }> {
+  // Save to prompt history if analysis data is present
+  if (payload.prompt && typeof payload.score === "number") {
     const { promptHistory = [] } = await chrome.storage.local.get("promptHistory");
     const entry = {
       prompt: payload.prompt.slice(0, 500),
-      score: data.score,
-      tip: data.tip,
-      improved: data.improved,
+      score: payload.score,
+      tip: payload.tip,
+      improved: payload.improved,
       timestamp: Date.now(),
     };
     promptHistory.unshift(entry);
     if (promptHistory.length > 20) promptHistory.length = 20;
     await chrome.storage.local.set({ promptHistory });
 
-    // Track usage
+    // Track daily prompt count
     await trackPromptCount();
-
-    return { data };
-  } catch (e) {
-    return { error: `Something went wrong: ${(e as Error).message}` };
   }
+
+  // Track sessions
+  if (payload.sessionId) {
+    const { sessions = [] } = await chrome.storage.local.get("sessions");
+    const today = new Date().toDateString();
+    if (!sessions.includes(`${today}:${payload.sessionId}`)) {
+      sessions.push(`${today}:${payload.sessionId}`);
+      const filtered = sessions.filter((s: string) => s.startsWith(today));
+      await chrome.storage.local.set({
+        sessions: filtered,
+        dailySessions: filtered.length,
+      });
+    }
+  }
+
+  return { success: true };
 }
 
 async function trackPromptCount() {
@@ -108,25 +92,6 @@ async function trackPromptCount() {
 
   dailyUsage.promptCount += 1;
   await chrome.storage.local.set({ dailyUsage });
-}
-
-async function handleTrackUsage(payload: {
-  sessionId?: string;
-}): Promise<{ success: boolean }> {
-  if (payload.sessionId) {
-    const { sessions = [] } = await chrome.storage.local.get("sessions");
-    const today = new Date().toDateString();
-    if (!sessions.includes(`${today}:${payload.sessionId}`)) {
-      sessions.push(`${today}:${payload.sessionId}`);
-      // Keep only today's sessions
-      const filtered = sessions.filter((s: string) => s.startsWith(today));
-      await chrome.storage.local.set({
-        sessions: filtered,
-        dailySessions: filtered.length,
-      });
-    }
-  }
-  return { success: true };
 }
 
 export {};

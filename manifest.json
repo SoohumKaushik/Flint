@@ -9,6 +9,7 @@
     "128": "public/icons/icon-128.png"
   },
   "permissions": ["storage", "sidePanel", "activeTab", "alarms"],
+  "host_permissions": ["https://flint-backend-two.vercel.app/*"],
   "background": {
     "service_worker": "src/background/index.ts",
     "type": "module"

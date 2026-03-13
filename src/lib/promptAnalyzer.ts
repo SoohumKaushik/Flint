@@ -4,27 +4,35 @@ export interface AnalysisResult {
   improved: string | null;
 }
 
-const SYSTEM_PROMPT = `You are a prompt coach for non-technical people building with AI. Analyze this prompt for clarity, specificity, and effectiveness for coding/building tasks. Rate it 1-10. Give ONE short plain-English tip (max 15 words). If score < 7, suggest an improved version. Return JSON: {"score": number, "tip": string, "improved": string|null}`;
+const FLINT_API_URL = "https://flint-backend-two.vercel.app/api/analyze";
 
 /**
- * Sends a prompt to the background service worker for analysis via OpenAI.
+ * Calls the Flint backend API directly to analyze a prompt.
  * Returns the parsed analysis result.
  */
 export async function analyzePrompt(prompt: string): Promise<AnalysisResult> {
-  const response = await chrome.runtime.sendMessage({
-    type: "ANALYZE_PROMPT",
-    payload: { prompt, systemPrompt: SYSTEM_PROMPT },
+  const response = await fetch(FLINT_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
   });
 
-  if (response.error) {
-    throw new Error(response.error);
+  if (!response.ok) {
+    throw new Error("Analysis failed — please try again");
   }
 
-  return response.data as AnalysisResult;
+  const data = await response.json();
+  if (data.error) throw new Error(data.error);
+  if (typeof data.score !== "number") throw new Error("Invalid response");
+
+  // Save to history via background (fire and forget)
+  chrome.runtime.sendMessage({ type: "TRACK_USAGE", payload: { prompt, ...data } }).catch(() => {});
+
+  return data as AnalysisResult;
 }
 
 /**
- * Requests the background worker to improve a prompt.
+ * Requests an improved version of a prompt.
  * Reuses the analysis flow — caller should use the `improved` field.
  */
 export async function improvePrompt(prompt: string): Promise<string | null> {
