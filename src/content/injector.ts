@@ -73,16 +73,25 @@ export function setInputText(text: string): void {
   if (!el) return;
 
   if (el.tagName === "TEXTAREA") {
-    (el as HTMLTextAreaElement).value = text;
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      "value"
+    )?.set;
+    nativeInputValueSetter?.call(el, text);
     el.dispatchEvent(new Event("input", { bubbles: true }));
     return;
   }
 
-  // For contenteditable (ProseMirror)
+  // For ProseMirror contenteditable
   el.focus();
-  el.innerHTML = "";
-  const p = document.createElement("p");
-  p.textContent = text;
-  el.appendChild(p);
-  el.dispatchEvent(new Event("input", { bubbles: true }));
+  // Select all and replace
+  document.execCommand("selectAll", false);
+  document.execCommand("insertText", false, text);
+  el.dispatchEvent(
+    new InputEvent("input", {
+      bubbles: true,
+      inputType: "insertText",
+      data: text,
+    })
+  );
 }
