@@ -15,7 +15,6 @@ export interface PromptEntry {
 }
 
 export interface FlintSettings {
-  openaiApiKey: string;
   autoAnalyze: boolean;
   showContextMeter: boolean;
 }
@@ -35,7 +34,6 @@ export const useFlintStore = create<FlintState>((set) => ({
   dailySessions: 0,
   promptHistory: [],
   settings: {
-    openaiApiKey: "",
     autoAnalyze: true,
     showContextMeter: true,
   },
@@ -45,7 +43,6 @@ export const useFlintStore = create<FlintState>((set) => ({
       "dailyUsage",
       "dailySessions",
       "promptHistory",
-      "openaiApiKey",
       "autoAnalyze",
       "showContextMeter",
     ]);
@@ -59,7 +56,6 @@ export const useFlintStore = create<FlintState>((set) => ({
       dailySessions: data.dailySessions || 0,
       promptHistory: data.promptHistory || [],
       settings: {
-        openaiApiKey: data.openaiApiKey || "",
         autoAnalyze: data.autoAnalyze !== false,
         showContextMeter: data.showContextMeter !== false,
       },
@@ -68,8 +64,6 @@ export const useFlintStore = create<FlintState>((set) => ({
 
   updateSettings: async (partial) => {
     const storageUpdate: Record<string, unknown> = {};
-    if (partial.openaiApiKey !== undefined)
-      storageUpdate.openaiApiKey = partial.openaiApiKey;
     if (partial.autoAnalyze !== undefined)
       storageUpdate.autoAnalyze = partial.autoAnalyze;
     if (partial.showContextMeter !== undefined)

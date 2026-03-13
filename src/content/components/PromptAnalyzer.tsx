@@ -84,7 +84,7 @@ const PromptAnalyzer: React.FC = () => {
         gap: "6px",
       }}
     >
-      {/* Error */}
+      {/* Error (non-key errors only) */}
       {error && (
         <div
           style={{

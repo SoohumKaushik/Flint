@@ -1,4 +1,4 @@
-const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+const FLINT_API_URL = "https://flint-backend.vercel.app/api/analyze";
 
 // Daily reset alarm
 chrome.alarms.create("daily-reset", {
@@ -43,54 +43,29 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 });
 
-async function getApiKey(): Promise<string | null> {
-  const { openaiApiKey } = await chrome.storage.local.get("openaiApiKey");
-  return openaiApiKey || null;
-}
-
 async function handleAnalyze(payload: {
   prompt: string;
   systemPrompt: string;
 }): Promise<{ data?: unknown; error?: string }> {
-  const apiKey = await getApiKey();
-  if (!apiKey) {
-    return {
-      error:
-        "No API key set. Open Flint settings and add your OpenAI key to get started.",
-    };
-  }
-
   try {
-    const res = await fetch(OPENAI_API_URL, {
+    const res = await fetch(FLINT_API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: payload.systemPrompt },
-          { role: "user", content: payload.prompt },
-        ],
-        temperature: 0.3,
-        response_format: { type: "json_object" },
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: payload.prompt }),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       return {
-        error: (err as { error?: { message?: string } }).error?.message || `API error (${res.status})`,
+        error: (err as { error?: string }).error || `API error (${res.status})`,
       };
     }
 
-    const json = (await res.json()) as {
-      choices: { message: { content: string } }[];
-      usage?: { total_tokens: number };
-    };
-    const content = json.choices[0].message.content;
-    const data = JSON.parse(content);
+    const data = await res.json();
+
+    if (data.error) {
+      return { error: data.error };
+    }
 
     // Save to history
     const { promptHistory = [] } = await chrome.storage.local.get("promptHistory");
@@ -105,10 +80,8 @@ async function handleAnalyze(payload: {
     if (promptHistory.length > 20) promptHistory.length = 20;
     await chrome.storage.local.set({ promptHistory });
 
-    // Track tokens used
-    if (json.usage) {
-      await trackTokens(json.usage.total_tokens);
-    }
+    // Track usage
+    await trackPromptCount();
 
     return { data };
   } catch (e) {
@@ -116,7 +89,7 @@ async function handleAnalyze(payload: {
   }
 }
 
-async function trackTokens(tokens: number) {
+async function trackPromptCount() {
   const { dailyUsage = { promptCount: 0, totalTokens: 0, date: "" } } =
     await chrome.storage.local.get("dailyUsage");
   const today = new Date().toDateString();
@@ -128,7 +101,6 @@ async function trackTokens(tokens: number) {
   }
 
   dailyUsage.promptCount += 1;
-  dailyUsage.totalTokens += tokens;
   await chrome.storage.local.set({ dailyUsage });
 }
 

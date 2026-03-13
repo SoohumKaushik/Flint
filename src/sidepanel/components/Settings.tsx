@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useFlintStore } from "../../store";
 
 const Toggle: React.FC<{
@@ -26,42 +26,9 @@ const Toggle: React.FC<{
 const Settings: React.FC = () => {
   const settings = useFlintStore((s) => s.settings);
   const updateSettings = useFlintStore((s) => s.updateSettings);
-  const [keyInput, setKeyInput] = useState(settings.openaiApiKey);
-  const [saved, setSaved] = useState(false);
-
-  const handleSaveKey = async () => {
-    await updateSettings({ openaiApiKey: keyInput });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
 
   return (
     <div className="flex flex-col gap-4">
-      {/* API Key */}
-      <div className="bg-flint-card border border-flint-border rounded-xl p-4">
-        <label className="text-xs font-semibold text-flint-text-secondary block mb-2">
-          OpenAI API Key
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="password"
-            value={keyInput}
-            onChange={(e) => setKeyInput(e.target.value)}
-            placeholder="sk-..."
-            className="flex-1 bg-flint-surface border border-flint-border rounded-lg px-3 py-2 text-xs text-flint-text-primary placeholder-flint-text-muted outline-none focus:border-flint-accent transition-colors"
-          />
-          <button
-            onClick={handleSaveKey}
-            className="bg-flint-accent hover:bg-flint-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
-          >
-            {saved ? "Saved!" : "Save"}
-          </button>
-        </div>
-        <p className="text-[10px] text-flint-text-muted mt-2">
-          Used for prompt analysis. Your key stays on your device.
-        </p>
-      </div>
-
       {/* Toggles */}
       <div className="bg-flint-card border border-flint-border rounded-xl p-4">
         <Toggle
@@ -82,6 +49,7 @@ const Settings: React.FC = () => {
         <p className="text-xs text-flint-text-muted">
           Your AI guardian. Built for builders.
         </p>
+        <p className="text-[10px] text-flint-accent mt-1">Powered by Flint AI</p>
         <p className="text-[10px] text-flint-text-muted mt-1">Flint v1.0.0</p>
       </div>
     </div>
