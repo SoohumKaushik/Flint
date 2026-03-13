@@ -25,6 +25,12 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 // Open side panel on action click
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.id) {
+    chrome.sidePanel.open({ tabId: tab.id });
+  }
+});
+
 // Message handler
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === "ANALYZE_PROMPT") {
