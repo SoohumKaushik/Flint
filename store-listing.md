@@ -40,10 +40,13 @@ English
 claude, ai, prompt, productivity, prompt engineering, claude.ai, ai tools, writing, coding
 
 ## Privacy Policy URL
-https://getflint.dev/privacy (or use GitHub Pages URL)
+https://soohumkaushik.github.io/Flint/privacy.html
 
 ## Website
-https://getflint.dev
+https://soohumkaushik.github.io/Flint/
+
+## Support
+https://github.com/SoohumKaushik/Flint/issues
 
 ## Screenshot Captions
 1. "Flint scores your prompt instantly — 2/10 with a clear tip"
