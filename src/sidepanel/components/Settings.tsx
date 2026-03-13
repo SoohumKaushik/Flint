@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useFlintStore } from "../../store";
 
 const Toggle: React.FC<{
@@ -26,6 +26,14 @@ const Toggle: React.FC<{
 const Settings: React.FC = () => {
   const settings = useFlintStore((s) => s.settings);
   const updateSettings = useFlintStore((s) => s.updateSettings);
+  const loadFromStorage = useFlintStore((s) => s.loadFromStorage);
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  const handleClearHistory = async () => {
+    await chrome.storage.local.set({ promptHistory: [] });
+    await loadFromStorage();
+    setConfirmClear(false);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -42,6 +50,37 @@ const Settings: React.FC = () => {
           checked={settings.showContextMeter}
           onChange={(v) => updateSettings({ showContextMeter: v })}
         />
+      </div>
+
+      {/* Danger Zone */}
+      <div className="bg-flint-card border border-flint-border rounded-xl p-4">
+        <span className="text-xs font-semibold text-flint-danger">Danger Zone</span>
+        <div className="mt-3">
+          {!confirmClear ? (
+            <button
+              onClick={() => setConfirmClear(true)}
+              className="text-xs text-flint-danger border border-flint-danger/30 rounded-lg px-3 py-1.5 hover:bg-flint-danger/10 transition-colors"
+            >
+              Clear prompt history
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-flint-text-muted">Are you sure?</span>
+              <button
+                onClick={handleClearHistory}
+                className="text-xs text-white bg-flint-danger rounded-lg px-3 py-1.5 hover:bg-flint-danger/80 transition-colors"
+              >
+                Yes, clear
+              </button>
+              <button
+                onClick={() => setConfirmClear(false)}
+                className="text-xs text-flint-text-muted hover:text-flint-text-primary transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tagline */}

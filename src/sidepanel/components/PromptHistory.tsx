@@ -20,6 +20,7 @@ const ScoreBadge: React.FC<{ score: number }> = ({ score }) => {
 
 const HistoryItem: React.FC<{ entry: PromptEntry }> = ({ entry }) => {
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const time = new Date(entry.timestamp).toLocaleTimeString([], {
     hour: "2-digit",
@@ -63,6 +64,17 @@ const HistoryItem: React.FC<{ entry: PromptEntry }> = ({ entry }) => {
               <p className="text-xs text-flint-text-primary">
                 {entry.improved}
               </p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(entry.improved!);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                }}
+                className="mt-1.5 text-xs text-flint-accent hover:text-flint-accent/80 transition-colors"
+              >
+                {copied ? "Copied!" : "📋 Copy improved prompt"}
+              </button>
             </div>
           )}
         </div>

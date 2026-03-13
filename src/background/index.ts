@@ -55,11 +55,11 @@ async function handleTrackUsage(payload: {
       timestamp: Date.now(),
     };
     promptHistory.unshift(entry);
-    if (promptHistory.length > 20) promptHistory.length = 20;
+    if (promptHistory.length > 50) promptHistory.length = 50;
     await chrome.storage.local.set({ promptHistory });
 
     // Track daily prompt count
-    await trackPromptCount();
+    await trackPromptCount(payload.prompt || "");
   }
 
   // Track sessions
@@ -79,7 +79,7 @@ async function handleTrackUsage(payload: {
   return { success: true };
 }
 
-async function trackPromptCount() {
+async function trackPromptCount(promptText: string) {
   const { dailyUsage = { promptCount: 0, totalTokens: 0, date: "" } } =
     await chrome.storage.local.get("dailyUsage");
   const today = new Date().toDateString();
@@ -91,6 +91,7 @@ async function trackPromptCount() {
   }
 
   dailyUsage.promptCount += 1;
+  dailyUsage.totalTokens += Math.ceil(promptText.length / 4);
   await chrome.storage.local.set({ dailyUsage });
 }
 

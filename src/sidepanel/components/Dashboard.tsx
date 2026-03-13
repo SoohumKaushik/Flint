@@ -89,6 +89,32 @@ const Dashboard: React.FC = () => {
         </p>
       </Card>
 
+      {/* Score Trend */}
+      {promptHistory.length > 0 && (
+        <Card>
+          <span className="text-xs font-semibold text-flint-text-secondary">
+            Score Trend
+          </span>
+          <div className="flex items-center gap-1.5 mt-2">
+            {promptHistory.slice(0, 7).map((p, i) => (
+              <div
+                key={i}
+                className={`w-2.5 h-2.5 rounded-full ${
+                  p.score >= 7
+                    ? "bg-flint-success"
+                    : p.score >= 4
+                      ? "bg-flint-warning"
+                      : "bg-flint-danger"
+                }`}
+              />
+            ))}
+          </div>
+          <p className="text-[10px] text-flint-text-muted mt-1.5">
+            Last {Math.min(promptHistory.length, 7)} prompts
+          </p>
+        </Card>
+      )}
+
       {/* Sessions */}
       <Card>
         <span className="text-xs font-semibold text-flint-text-secondary">

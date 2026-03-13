@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { analyzePrompt, type AnalysisResult } from "../../lib/promptAnalyzer";
 import { getInputText, setInputText, findTextarea } from "../injector";
 
@@ -8,6 +8,9 @@ const PromptAnalyzer: React.FC = () => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentPrompt, setCurrentPrompt] = useState("");
+  const [autoAnalyze, setAutoAnalyze] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleAnalyzeRef = useRef<() => void>(() => {});
 
   const checkInput = useCallback(() => {
     const text = getInputText().trim();
@@ -62,6 +65,40 @@ const PromptAnalyzer: React.FC = () => {
     };
   }, [checkInput]);
 
+  // Read autoAnalyze setting on mount and listen for changes
+  useEffect(() => {
+    chrome.storage.local.get("autoAnalyze").then((data) => {
+      setAutoAnalyze(data.autoAnalyze !== false);
+    });
+    const listener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes.autoAnalyze) {
+        setAutoAnalyze(changes.autoAnalyze.newValue !== false);
+      }
+    };
+    chrome.storage.onChanged.addListener(listener);
+    return () => chrome.storage.onChanged.removeListener(listener);
+  }, []);
+
+  // Inject pulse animation keyframe
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `@keyframes flintPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }`;
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
+
+  // Auto-analyze debounce when autoAnalyze is on
+  useEffect(() => {
+    if (!autoAnalyze || currentPrompt.length < 15 || result || loading) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      handleAnalyzeRef.current();
+    }, 1500);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [autoAnalyze, currentPrompt, result, loading]);
+
   const handleAnalyze = async () => {
     if (!currentPrompt || loading) return;
     setLoading(true);
@@ -75,6 +112,8 @@ const PromptAnalyzer: React.FC = () => {
       setLoading(false);
     }
   };
+
+  handleAnalyzeRef.current = handleAnalyze;
 
   const handleImprove = () => {
     if (result?.improved) {
@@ -214,6 +253,7 @@ const PromptAnalyzer: React.FC = () => {
             alignItems: "center",
             gap: "6px",
             boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
+            animation: loading ? "none" : "flintPulse 2s ease-in-out infinite",
           }}
           onMouseOver={(e) => {
             if (!loading) e.currentTarget.style.borderColor = "#8B5CF6";
@@ -223,7 +263,7 @@ const PromptAnalyzer: React.FC = () => {
           }}
         >
           <span style={{ fontSize: "14px" }}>⚡</span>
-          {loading ? "Checking..." : "Check my prompt"}
+          {loading ? "Scoring..." : "✦ Score my prompt"}
         </button>
       )}
     </div>
