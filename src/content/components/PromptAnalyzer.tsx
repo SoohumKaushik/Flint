@@ -36,14 +36,15 @@ const PromptAnalyzer: React.FC = () => {
         el.addEventListener("input", checkInput);
         el.addEventListener("keyup", checkInput);
       }
-      if (!found && retries < 20) {
+      if (!found && retries < 30) {
         retries++;
-        setTimeout(attachListeners, 500);
+        setTimeout(attachListeners, 1000);
       }
     };
 
     const interval = setInterval(checkInput, 600);
-    attachListeners();
+    // Wait 3 seconds on cold load before first attempt — claude.ai mounts the editor late
+    setTimeout(attachListeners, 3000);
 
     const observer = new MutationObserver(() => {
       attachListeners();
