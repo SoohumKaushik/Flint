@@ -1,7 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Flint brand colors */
+  --color-flint-bg: #0D0D1A;
+  --color-flint-surface: #111122;
+  --color-flint-card: #141428;
+  --color-flint-border: #1E1E35;
+  --color-flint-purple: #8B5CF6;
+  --color-flint-purple-hover: #7C3AED;
+  --color-flint-amber: #F59E0B;
+  --color-flint-success: #10B981;
+  --color-flint-danger: #EF4444;
+  --color-flint-text: #F1F0FF;
+  --color-flint-muted: #8B8BAE;
+
+  /* Animations */
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-pulse-slow: pulse 3s ease-in-out infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+}
 
 * {
   box-sizing: border-box;
@@ -108,13 +132,12 @@ body::before {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-/* Step connector line */
-.step-line::after {
-  content: '';
-  position: absolute;
-  top: 20px;
-  left: calc(50% + 20px);
-  width: calc(100% - 40px);
-  height: 1px;
-  background: linear-gradient(to right, rgba(139, 92, 246, 0.4), rgba(139, 92, 246, 0.1));
+/* Float animation */
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
