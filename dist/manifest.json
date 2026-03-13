@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "Flint — AI Usage Guardian",
+  "description": "Your AI guardian. Built for builders. Helps you write better prompts and track your AI usage.",
+  "version": "1.0.0",
+  "icons": {
+    "16": "public/icons/icon-16.png",
+    "48": "public/icons/icon-48.png",
+    "128": "public/icons/icon-128.png"
+  },
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "assets/index.tsx-loader-Cqxrriix.js"
+      ],
+      "matches": [
+        "https://claude.ai/*"
+      ],
+      "css": []
+    }
+  ],
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "action": {
+    "default_title": "Open Flint"
+  },
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "https://claude.ai/*"
+      ],
+      "resources": [
+        "assets/client-C3Mcq2Xm.js",
+        "assets/index.tsx-XEJYnCBJ.js"
+      ],
+      "use_dynamic_url": false
+    }
+  ]
+}

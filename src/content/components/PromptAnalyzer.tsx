@@ -1,0 +1,213 @@
+import React, { useEffect, useState, useCallback } from "react";
+import { analyzePrompt, type AnalysisResult } from "../../lib/promptAnalyzer";
+import { getInputText, setInputText, findTextarea } from "../injector";
+
+const PromptAnalyzer: React.FC = () => {
+  const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPrompt, setCurrentPrompt] = useState("");
+
+  const checkInput = useCallback(() => {
+    const text = getInputText().trim();
+    setCurrentPrompt(text);
+    if (text.length >= 20) {
+      setVisible(true);
+    } else {
+      setVisible(false);
+      setResult(null);
+      setError(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Poll for textarea changes since contenteditable events are unreliable
+    const interval = setInterval(checkInput, 800);
+
+    // Also listen for input events
+    const handler = () => checkInput();
+    const el = findTextarea();
+    if (el) {
+      el.addEventListener("input", handler);
+      el.addEventListener("keyup", handler);
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (el) {
+        el.removeEventListener("input", handler);
+        el.removeEventListener("keyup", handler);
+      }
+    };
+  }, [checkInput]);
+
+  const handleAnalyze = async () => {
+    if (!currentPrompt || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await analyzePrompt(currentPrompt);
+      setResult(res);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImprove = () => {
+    if (result?.improved) {
+      setInputText(result.improved);
+      setResult(null);
+    }
+  };
+
+  if (!visible) return null;
+
+  const scoreColor =
+    result && result.score >= 7
+      ? "#10B981"
+      : result && result.score >= 4
+        ? "#F59E0B"
+        : result
+          ? "#EF4444"
+          : "#8B5CF6";
+
+  return (
+    <div
+      style={{
+        fontFamily: "Inter, system-ui, sans-serif",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        gap: "6px",
+      }}
+    >
+      {/* Error */}
+      {error && (
+        <div
+          style={{
+            background: "#141428",
+            border: "1px solid #EF4444",
+            borderRadius: "10px",
+            padding: "8px 12px",
+            color: "#F1F0FF",
+            fontSize: "12px",
+            maxWidth: "260px",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* Result card */}
+      {result && (
+        <div
+          style={{
+            background: "#141428",
+            border: "1px solid #1E1E35",
+            borderRadius: "12px",
+            padding: "10px 14px",
+            maxWidth: "280px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginBottom: "6px",
+            }}
+          >
+            <span
+              style={{
+                background: scoreColor,
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: "13px",
+                borderRadius: "6px",
+                padding: "2px 8px",
+                minWidth: "28px",
+                textAlign: "center",
+              }}
+            >
+              {result.score}/10
+            </span>
+            <span style={{ color: "#8B8BAE", fontSize: "12px" }}>
+              Prompt score
+            </span>
+          </div>
+          <p
+            style={{
+              color: "#F1F0FF",
+              fontSize: "12px",
+              margin: "0 0 8px 0",
+              lineHeight: 1.4,
+            }}
+          >
+            {result.tip}
+          </p>
+          {result.improved && (
+            <button
+              onClick={handleImprove}
+              style={{
+                background: "#8B5CF6",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "6px 14px",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer",
+                width: "100%",
+              }}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.background = "#7C3AED")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.background = "#8B5CF6")
+              }
+            >
+              Improve it
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Analyze badge */}
+      {!result && (
+        <button
+          onClick={handleAnalyze}
+          disabled={loading}
+          style={{
+            background: loading ? "#1E1E35" : "#141428",
+            border: "1px solid #1E1E35",
+            borderRadius: "20px",
+            padding: "6px 14px",
+            color: "#8B5CF6",
+            fontSize: "12px",
+            fontWeight: 600,
+            cursor: loading ? "wait" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
+          }}
+          onMouseOver={(e) => {
+            if (!loading) e.currentTarget.style.borderColor = "#8B5CF6";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.borderColor = "#1E1E35";
+          }}
+        >
+          <span style={{ fontSize: "14px" }}>⚡</span>
+          {loading ? "Checking..." : "Check my prompt"}
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default PromptAnalyzer;
