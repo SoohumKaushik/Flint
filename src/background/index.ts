@@ -1,4 +1,4 @@
-const FLINT_API_URL = "https://flint-backend.vercel.app/api/analyze";
+const FLINT_API_URL = "https://flint-backend-two.vercel.app/api/analyze";
 
 // Daily reset alarm
 chrome.alarms.create("daily-reset", {
