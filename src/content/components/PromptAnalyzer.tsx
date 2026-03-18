@@ -119,6 +119,17 @@ const PromptAnalyzer: React.FC = () => {
     try {
       const res = await analyzePrompt(currentPrompt);
       setResult(res);
+
+      // Track in live session
+      chrome.storage.local.get("currentSession").then((data) => {
+        const session = data.currentSession || { startTime: Date.now(), entries: [] };
+        session.entries.push({
+          prompt: currentPrompt,
+          score: res.score,
+          timestamp: Date.now(),
+        });
+        chrome.storage.local.set({ currentSession: session });
+      });
     } catch (e) {
       setError((e as Error).message);
     } finally {

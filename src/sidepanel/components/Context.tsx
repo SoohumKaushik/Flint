@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useFlintStore } from "../../store";
 import Onboarding from "./Onboarding";
+import LiveSession from "./LiveSession";
 
 const Context: React.FC = () => {
   const projectContext = useFlintStore((s) => s.projectContext);
@@ -86,6 +87,9 @@ const Context: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Live Session */}
+      <LiveSession />
+
       {/* Project DNA */}
       <div className="bg-flint-card border border-flint-border rounded-xl p-3.5">
         <div className="flex items-center justify-between mb-2">
