@@ -70,28 +70,50 @@ export function getInputText(): string {
 /** Set text in the input area */
 export function setInputText(text: string): void {
   const el = findTextarea();
-  if (!el) return;
-
-  if (el.tagName === "TEXTAREA") {
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLTextAreaElement.prototype,
-      "value"
-    )?.set;
-    nativeInputValueSetter?.call(el, text);
-    el.dispatchEvent(new Event("input", { bubbles: true }));
+  if (!el) {
+    navigator.clipboard.writeText(text).catch(() => {});
     return;
   }
 
-  // For ProseMirror contenteditable
-  el.focus();
-  // Select all and replace
-  document.execCommand("selectAll", false);
-  document.execCommand("insertText", false, text);
-  el.dispatchEvent(
-    new InputEvent("input", {
-      bubbles: true,
-      inputType: "insertText",
-      data: text,
-    })
-  );
+  if (el.tagName === "TEXTAREA") {
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype, "value"
+    )?.set;
+    nativeInputValueSetter?.call(el, text);
+    el.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    return;
+  }
+
+  // ProseMirror contenteditable (claude.ai)
+  try {
+    el.focus();
+    const selection = window.getSelection();
+    if (selection) {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      selection.deleteFromDocument();
+      const textNode = document.createTextNode(text);
+      const newRange = document.createRange();
+      newRange.setStart(el, 0);
+      newRange.collapse(true);
+      newRange.insertNode(textNode);
+      newRange.setStartAfter(textNode);
+      newRange.setEndAfter(textNode);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    }
+    el.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
+  } catch {
+    // execCommand fallback
+    try {
+      el.focus();
+      document.execCommand("selectAll", false);
+      document.execCommand("insertText", false, text);
+    } catch {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
+  }
 }

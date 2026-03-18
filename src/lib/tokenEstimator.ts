@@ -11,7 +11,8 @@ export const MAX_CONTEXT_TOKENS = 200_000;
 export const MAX_CONTEXT_CHARS = 800_000;
 
 export function contextPercentage(charCount: number): number {
-  return Math.min(100, (charCount / MAX_CONTEXT_CHARS) * 100);
+  const tokenEstimate = Math.ceil(charCount / 4);
+  return Math.min(100, (tokenEstimate / 200000) * 100);
 }
 
 export function contextLabel(pct: number): string {

@@ -22,10 +22,29 @@ function init() {
   );
 
   // Track session
-  const sessionId = window.location.pathname.split("/").pop() || "default";
-  chrome.runtime.sendMessage({
-    type: "TRACK_USAGE",
-    payload: { sessionId },
+  const CLAUDE_NEW_PATTERNS = ["/new", "/chat/new"];
+  const isNewConversation = CLAUDE_NEW_PATTERNS.some(p => window.location.pathname.includes(p));
+
+  async function getOrCreateSessionId(): Promise<string> {
+    try {
+      const storage = (chrome.storage as any).session ?? chrome.storage.local;
+      const data = await storage.get("flintSessionId");
+      if (isNewConversation || !data.flintSessionId) {
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        await storage.set({ flintSessionId: id });
+        return id;
+      }
+      return data.flintSessionId;
+    } catch {
+      return `${Date.now()}-fallback`;
+    }
+  }
+
+  getOrCreateSessionId().then((sessionId) => {
+    chrome.runtime.sendMessage({
+      type: "TRACK_USAGE",
+      payload: { sessionId },
+    }).catch(() => {});
   });
 
   // Listen for text injection from background

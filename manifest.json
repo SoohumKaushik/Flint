@@ -1,15 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Flint — AI Usage Guardian",
-  "description": "Your AI guardian. Built for builders. Helps you write better prompts and track your AI usage.",
-  "version": "1.0.0",
+  "description": "Score and improve your Claude prompts in real time. Project context, session tracking, and one-click rewrites — so Claude gets what you want.",
+  "version": "2.0.0",
   "icons": {
     "16": "public/icons/icon-16.png",
     "48": "public/icons/icon-48.png",
     "128": "public/icons/icon-128.png"
   },
-  "permissions": ["storage", "sidePanel", "activeTab", "alarms"],
-  "host_permissions": ["https://flint-backend-two.vercel.app/*"],
+  "permissions": ["storage", "sidePanel", "activeTab", "alarms", "tabs"],
+  "host_permissions": ["https://flint-backend-two.vercel.app/*", "https://claude.ai/*"],
   "background": {
     "service_worker": "src/background/index.ts",
     "type": "module"

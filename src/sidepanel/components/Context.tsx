@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useFlintStore } from "../../store";
+import { trackEvent } from "../../lib/promptAnalyzer";
 import Onboarding from "./Onboarding";
 import LiveSession from "./LiveSession";
 
@@ -33,6 +34,7 @@ const Context: React.FC = () => {
       onboardingComplete: true,
     });
     await setSessionGoal(data.sessionGoal);
+    trackEvent("context_setup_completed");
     setEditing(false);
   };
 
@@ -56,6 +58,7 @@ const Context: React.FC = () => {
 
     const text = lines.join("\n");
     chrome.runtime.sendMessage({ type: "INJECT_BRIEF", text });
+    trackEvent("brief_claude_used");
     setToast(true);
     setTimeout(() => setToast(false), 2000);
   };
@@ -105,7 +108,7 @@ const Context: React.FC = () => {
               }
               className="sr-only peer"
             />
-            <div className="w-8 h-4.5 bg-flint-border rounded-full peer peer-checked:bg-flint-accent transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:after:translate-x-3.5" />
+            <div className="w-9 h-5 bg-flint-surface border border-flint-border rounded-full peer peer-checked:bg-flint-accent peer-checked:border-flint-accent transition-all after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:after:translate-x-4 after:shadow-sm" />
           </label>
         </div>
         <p className="text-sm font-medium text-flint-text-primary mb-0.5">

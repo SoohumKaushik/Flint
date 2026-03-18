@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFlintStore } from "../../store";
 
 const Toggle: React.FC<{
@@ -28,6 +28,13 @@ const Settings: React.FC = () => {
   const updateSettings = useFlintStore((s) => s.updateSettings);
   const loadFromStorage = useFlintStore((s) => s.loadFromStorage);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
+
+  useEffect(() => {
+    chrome.storage.local.get("analyticsEnabled").then((data) => {
+      setAnalyticsEnabled(data.analyticsEnabled !== false);
+    });
+  }, []);
 
   const handleClearHistory = async () => {
     await chrome.storage.local.set({ promptHistory: [] });
@@ -50,7 +57,17 @@ const Settings: React.FC = () => {
           checked={settings.showContextMeter}
           onChange={(v) => updateSettings({ showContextMeter: v })}
         />
+        <div className="border-t border-flint-border" />
+        <Toggle
+          label="Help improve Flint (anonymous stats)"
+          checked={analyticsEnabled}
+          onChange={async (v) => {
+            await chrome.storage.local.set({ analyticsEnabled: v });
+            setAnalyticsEnabled(v);
+          }}
+        />
       </div>
+      <p className="text-[10px] text-flint-text-muted mt-2 px-1">No prompt content is ever collected.</p>
 
       {/* Danger Zone */}
       <div className="bg-flint-card border border-flint-border rounded-xl p-4">
@@ -89,7 +106,7 @@ const Settings: React.FC = () => {
           Your AI guardian. Built for builders.
         </p>
         <p className="text-[10px] text-flint-accent mt-1">Powered by Flint AI</p>
-        <p className="text-[10px] text-flint-text-muted mt-1">Flint v1.0.0</p>
+        <p className="text-[10px] text-flint-text-muted mt-1">Flint v2.0.0</p>
       </div>
     </div>
   );

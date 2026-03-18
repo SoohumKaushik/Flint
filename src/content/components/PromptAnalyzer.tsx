@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { analyzePrompt, type AnalysisResult } from "../../lib/promptAnalyzer";
+import { analyzePrompt, trackEvent, type AnalysisResult } from "../../lib/promptAnalyzer";
 import { getInputText, setInputText, findTextarea } from "../injector";
 
 type ImproveState = "idle" | "improving" | "done";
@@ -139,6 +139,7 @@ const PromptAnalyzer: React.FC = () => {
     setImproveState("improving");
     await new Promise((r) => setTimeout(r, 400));
     setInputText(result.improved);
+    trackEvent("improve_clicked");
     setImproveState("done");
     await new Promise((r) => setTimeout(r, 1500));
     setResult(null);

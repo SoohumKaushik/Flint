@@ -33,6 +33,7 @@ const ContextMeter: React.FC = () => {
 
   return (
     <div
+      title="Estimated from conversation length — not exact token count"
       style={{
         pointerEvents: "auto",
         fontFamily: "Inter, system-ui, sans-serif",
@@ -69,7 +70,7 @@ const ContextMeter: React.FC = () => {
             letterSpacing: "0.02em",
           }}
         >
-          {label} — {Math.round(pct)}% used
+          {label} — ~{Math.round(pct)}% est.
         </div>
       )}
     </div>
