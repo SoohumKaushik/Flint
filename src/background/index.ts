@@ -36,6 +36,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "ADD_SESSION_ENTRY" && message.entry) {
+    chrome.storage.local.get("currentSession").then((data) => {
+      const session = data.currentSession || { startTime: Date.now(), entries: [] };
+      session.entries = session.entries || [];
+      session.entries.push({
+        prompt: message.entry.prompt,
+        score: message.entry.score,
+        timestamp: Date.now(),
+      });
+      return chrome.storage.local.set({ currentSession: session });
+    }).catch(console.error);
+    return false;
+  }
+
   if (message.type === "OPEN_SIDE_PANEL" && sender.tab?.id) {
     chrome.sidePanel.open({ tabId: sender.tab.id });
   }

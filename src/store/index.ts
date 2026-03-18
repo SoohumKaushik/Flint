@@ -129,7 +129,7 @@ export const useFlintStore = create<FlintState>((set) => ({
     if (partial.showContextMeter !== undefined)
       storageUpdate.showContextMeter = partial.showContextMeter;
 
-    await chrome.storage.local.set(storageUpdate);
+    await chrome.storage.local.set(storageUpdate).catch(console.error);
 
     set((state) => ({
       settings: { ...state.settings, ...partial },
@@ -139,12 +139,12 @@ export const useFlintStore = create<FlintState>((set) => ({
   updateProjectContext: async (partial) => {
     const { projectContext: current } = await chrome.storage.local.get("projectContext");
     const updated = { ...(current || {}), ...partial };
-    await chrome.storage.local.set({ projectContext: updated });
+    await chrome.storage.local.set({ projectContext: updated }).catch(console.error);
     set({ projectContext: updated });
   },
 
   setSessionGoal: async (goal) => {
-    await chrome.storage.local.set({ sessionGoal: goal });
+    await chrome.storage.local.set({ sessionGoal: goal }).catch(console.error);
     set({ sessionGoal: goal });
   },
 
@@ -152,20 +152,20 @@ export const useFlintStore = create<FlintState>((set) => ({
     const newRef: Reference = { ...ref, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
     const { references = [] } = await chrome.storage.local.get("references");
     const updated = [...references, newRef];
-    await chrome.storage.local.set({ references: updated });
+    await chrome.storage.local.set({ references: updated }).catch(console.error);
     set({ references: updated });
   },
 
   removeReference: async (id) => {
     const { references = [] } = await chrome.storage.local.get("references");
     const updated = references.filter((r: Reference) => r.id !== id);
-    await chrome.storage.local.set({ references: updated });
+    await chrome.storage.local.set({ references: updated }).catch(console.error);
     set({ references: updated });
   },
 
   startNewSession: async () => {
     const session = { startTime: Date.now(), entries: [] };
-    await chrome.storage.local.set({ currentSession: session });
+    await chrome.storage.local.set({ currentSession: session }).catch(console.error);
     set({ currentSession: session });
   },
 
@@ -173,7 +173,7 @@ export const useFlintStore = create<FlintState>((set) => ({
     const { currentSession } = await chrome.storage.local.get("currentSession");
     const session = currentSession || { startTime: Date.now(), entries: [] };
     session.entries.push({ ...entry, timestamp: Date.now() });
-    await chrome.storage.local.set({ currentSession: session });
+    await chrome.storage.local.set({ currentSession: session }).catch(console.error);
     set({ currentSession: session });
   },
 }));

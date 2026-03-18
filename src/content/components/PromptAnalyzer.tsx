@@ -70,7 +70,7 @@ const PromptAnalyzer: React.FC = () => {
 
   // Read autoAnalyze + context state on mount and listen for changes
   useEffect(() => {
-    chrome.storage.local.get(["autoAnalyze", "projectContext"]).then((data) => {
+    chrome.storage.local.get(["autoAnalyze", "projectContext"]).catch(() => ({})).then((data) => {
       setAutoAnalyze(data.autoAnalyze !== false);
       const ctx = data.projectContext;
       setContextActive(ctx?.onboardingComplete && ctx?.enabled);
@@ -120,16 +120,11 @@ const PromptAnalyzer: React.FC = () => {
       const res = await analyzePrompt(currentPrompt);
       setResult(res);
 
-      // Track in live session
-      chrome.storage.local.get("currentSession").then((data) => {
-        const session = data.currentSession || { startTime: Date.now(), entries: [] };
-        session.entries.push({
-          prompt: currentPrompt,
-          score: res.score,
-          timestamp: Date.now(),
-        });
-        chrome.storage.local.set({ currentSession: session });
-      });
+      // Track in live session — route through background to avoid storage contention
+      chrome.runtime.sendMessage({
+        type: "ADD_SESSION_ENTRY",
+        entry: { prompt: currentPrompt, score: res.score }
+      }).catch(() => {}); // ignore if background not ready
     } catch (e) {
       setError((e as Error).message);
     } finally {
