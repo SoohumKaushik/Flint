@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { analyzePrompt, type AnalysisResult } from "../../lib/promptAnalyzer";
 import { getInputText, setInputText, findTextarea } from "../injector";
 
+type ImproveState = "idle" | "improving" | "done";
+
 const PromptAnalyzer: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -10,6 +12,7 @@ const PromptAnalyzer: React.FC = () => {
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [autoAnalyze, setAutoAnalyze] = useState(false);
   const [contextActive, setContextActive] = useState(false);
+  const [improveState, setImproveState] = useState<ImproveState>("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleAnalyzeRef = useRef<() => void>(() => {});
 
@@ -91,6 +94,7 @@ const PromptAnalyzer: React.FC = () => {
     style.textContent = `
       @keyframes flintPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
       @keyframes flintRingFill { from { stroke-dashoffset: 100; } }
+      @keyframes flintShimmer { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     `;
     document.head.appendChild(style);
     return () => { document.head.removeChild(style); };
@@ -124,11 +128,19 @@ const PromptAnalyzer: React.FC = () => {
 
   handleAnalyzeRef.current = handleAnalyze;
 
-  const handleImprove = () => {
-    if (result?.improved) {
-      setInputText(result.improved);
-      setResult(null);
-    }
+  const handleImprove = async () => {
+    if (!result?.improved) return;
+    setImproveState("improving");
+    await new Promise((r) => setTimeout(r, 400));
+    setInputText(result.improved);
+    setImproveState("done");
+    await new Promise((r) => setTimeout(r, 1500));
+    setResult(null);
+    setImproveState("idle");
+  };
+
+  const handleKeepOriginal = () => {
+    setResult(null);
   };
 
   const openSidePanel = () => {
@@ -182,7 +194,7 @@ const PromptAnalyzer: React.FC = () => {
       )}
 
       {/* Result card */}
-      {result && (
+      {result && improveState !== "done" && (
         <div
           style={{
             background: "#141428",
@@ -277,34 +289,61 @@ const PromptAnalyzer: React.FC = () => {
             </p>
           </div>
           {result.improved && (
-            <button
-              onClick={handleImprove}
-              style={{
-                background: "#8B5CF6",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                padding: "6px 14px",
-                fontSize: "12px",
-                fontWeight: 600,
-                cursor: "pointer",
-                width: "100%",
-              }}
-              onMouseOver={(e) =>
-                (e.currentTarget.style.background = "#7C3AED")
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.background = "#8B5CF6")
-              }
-            >
-              Improve it
-            </button>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={handleKeepOriginal}
+                disabled={improveState === "improving"}
+                style={{
+                  background: "none",
+                  color: "#8B8BAE",
+                  border: "1px solid #1E1E35",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  cursor: improveState === "improving" ? "default" : "pointer",
+                  flex: 1,
+                  opacity: improveState === "improving" ? 0.5 : 1,
+                }}
+                onMouseOver={(e) => {
+                  if (improveState !== "improving") e.currentTarget.style.borderColor = "#8B8BAE";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.borderColor = "#1E1E35";
+                }}
+              >
+                ← Keep original
+              </button>
+              <button
+                onClick={handleImprove}
+                disabled={improveState === "improving"}
+                style={{
+                  background: improveState === "improving" ? "#6D28D9" : "#8B5CF6",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: improveState === "improving" ? "wait" : "pointer",
+                  flex: 1,
+                }}
+                onMouseOver={(e) => {
+                  if (improveState !== "improving") e.currentTarget.style.background = "#7C3AED";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = improveState === "improving" ? "#6D28D9" : "#8B5CF6";
+                }}
+              >
+                {improveState === "improving" ? "Improving..." : "Improve it →"}
+              </button>
+            </div>
           )}
         </div>
       )}
 
-      {/* Floating bar (no result) */}
-      {!result && (
+      {/* Floating bar (no result or done state) */}
+      {(!result || improveState === "done") && (
         <div
           style={{
             display: "flex",
@@ -314,16 +353,16 @@ const PromptAnalyzer: React.FC = () => {
         >
           <button
             onClick={handleAnalyze}
-            disabled={loading}
+            disabled={loading || improveState === "done"}
             style={{
               background: loading ? "#1E1E35" : "#141428",
               border: "1px solid #1E1E35",
               borderRadius: "20px",
               padding: "6px 14px",
-              color: "#8B5CF6",
+              color: improveState === "done" ? "#10B981" : "#8B5CF6",
               fontSize: "12px",
               fontWeight: 600,
-              cursor: loading ? "wait" : "pointer",
+              cursor: loading || improveState === "done" ? "default" : "pointer",
               display: "flex",
               alignItems: "center",
               gap: "6px",
@@ -351,7 +390,11 @@ const PromptAnalyzer: React.FC = () => {
               />
             )}
             <span style={{ fontSize: "14px" }}>⚡</span>
-            {loading ? "Scoring..." : "Score my prompt"}
+            {improveState === "done"
+              ? "Enhanced ✓"
+              : loading
+                ? "Scoring..."
+                : "Score my prompt"}
           </button>
 
           {/* Open sidebar button */}
