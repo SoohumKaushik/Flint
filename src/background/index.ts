@@ -30,10 +30,22 @@ chrome.action.onClicked.addListener((tab) => {
 });
 
 // Message handler
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "TRACK_USAGE") {
     handleTrackUsage(message.payload).then(sendResponse);
-    return true; // keep channel open for async
+    return true;
+  }
+
+  if (message.type === "OPEN_SIDE_PANEL" && sender.tab?.id) {
+    chrome.sidePanel.open({ tabId: sender.tab.id });
+  }
+
+  if (message.type === "INJECT_BRIEF" && message.text) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, { type: "INJECT_TEXT", text: message.text });
+      }
+    });
   }
 });
 

@@ -1,3 +1,5 @@
+import type { ProjectContext, Reference } from "../store";
+
 export interface AnalysisResult {
   score: number;
   tip: string;
@@ -11,10 +13,30 @@ const FLINT_API_URL = "https://flint-backend-two.vercel.app/api/analyze";
  * Returns the parsed analysis result.
  */
 export async function analyzePrompt(prompt: string): Promise<AnalysisResult> {
+  // Read context from storage
+  const stored = await chrome.storage.local.get(["projectContext", "sessionGoal", "references"]);
+  const projectContext = stored.projectContext as ProjectContext | undefined;
+  const sessionGoal = stored.sessionGoal as string | undefined;
+  const references = stored.references as Reference[] | undefined;
+
+  let context: Record<string, unknown> | undefined;
+  if (projectContext?.onboardingComplete && projectContext?.enabled) {
+    context = {
+      projectName: projectContext.name || undefined,
+      projectDescription: projectContext.description || undefined,
+      stack: projectContext.stack || undefined,
+      targetUsers: projectContext.targetUsers || undefined,
+      sessionGoal: sessionGoal || undefined,
+      references: references?.length
+        ? references.map((r) => ({ label: r.label, content: r.content }))
+        : undefined,
+    };
+  }
+
   const response = await fetch(FLINT_API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, context }),
   });
 
   if (!response.ok) {

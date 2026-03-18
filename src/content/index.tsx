@@ -2,7 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import ContextMeter from "./components/ContextMeter";
 import PromptAnalyzer from "./components/PromptAnalyzer";
-import { mountContextMeter, mountPromptAnalyzer } from "./injector";
+import { mountContextMeter, mountPromptAnalyzer, setInputText } from "./injector";
 
 function init() {
   // Mount context meter
@@ -26,6 +26,13 @@ function init() {
   chrome.runtime.sendMessage({
     type: "TRACK_USAGE",
     payload: { sessionId },
+  });
+
+  // Listen for text injection from background
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.type === "INJECT_TEXT" && msg.text) {
+      setInputText(msg.text);
+    }
   });
 }
 
