@@ -13,6 +13,7 @@ const PromptAnalyzer: React.FC = () => {
   const [autoAnalyze, setAutoAnalyze] = useState(false);
   const [contextActive, setContextActive] = useState(false);
   const [improveState, setImproveState] = useState<ImproveState>("idle");
+  const [originalPrompt, setOriginalPrompt] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleAnalyzeRef = useRef<() => void>(() => {});
 
@@ -118,6 +119,7 @@ const PromptAnalyzer: React.FC = () => {
     setError(null);
     try {
       const res = await analyzePrompt(currentPrompt);
+      setOriginalPrompt(currentPrompt);
       setResult(res);
 
       // Track in live session — route through background to avoid storage contention
@@ -141,9 +143,12 @@ const PromptAnalyzer: React.FC = () => {
     setInputText(result.improved);
     trackEvent("improve_clicked");
     setImproveState("done");
-    await new Promise((r) => setTimeout(r, 1500));
-    setResult(null);
+  };
+
+  const handleUndo = () => {
+    setInputText(originalPrompt);
     setImproveState("idle");
+    setResult(null);
   };
 
   const handleKeepOriginal = () => {
@@ -403,6 +408,27 @@ const PromptAnalyzer: React.FC = () => {
                 ? "Scoring..."
                 : "Score my prompt"}
           </button>
+
+          {/* Undo button after improvement */}
+          {improveState === "done" && (
+            <button
+              onClick={handleUndo}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#8B8BAE",
+                fontSize: "11px",
+                fontWeight: 400,
+                cursor: "pointer",
+                padding: "4px 6px",
+                whiteSpace: "nowrap",
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.color = "#F1F0FF")}
+              onMouseOut={(e) => (e.currentTarget.style.color = "#8B8BAE")}
+            >
+              ← Undo
+            </button>
+          )}
 
           {/* Open sidebar button */}
           <button

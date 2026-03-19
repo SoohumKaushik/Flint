@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useFlintStore } from "../../store";
-import { trackEvent } from "../../lib/promptAnalyzer";
+import { trackEvent, generateBrief } from "../../lib/promptAnalyzer";
 import Onboarding from "./Onboarding";
 import LiveSession from "./LiveSession";
 
@@ -17,7 +17,7 @@ const Context: React.FC = () => {
   const [showRefForm, setShowRefForm] = useState(false);
   const [refLabel, setRefLabel] = useState("");
   const [refContent, setRefContent] = useState("");
-  const [toast, setToast] = useState(false);
+  const [briefing, setBriefing] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   const handleOnboardingComplete = async (data: {
     name: string;
@@ -46,7 +46,7 @@ const Context: React.FC = () => {
     setShowRefForm(false);
   };
 
-  const handleBriefClaude = async () => {
+  const buildFallbackBrief = () => {
     const lines = [`[Context for this session]`];
     lines.push(`Project: ${projectContext.name} — ${projectContext.description}`);
     lines.push(`Stack: ${projectContext.stack}`);
@@ -55,12 +55,31 @@ const Context: React.FC = () => {
     references.forEach((r) => lines.push(`${r.label}: ${r.content}`));
     lines.push("");
     lines.push("Keep this context in mind throughout our conversation.");
+    return lines.join("\n");
+  };
 
-    const text = lines.join("\n");
-    chrome.runtime.sendMessage({ type: "INJECT_BRIEF", text });
+  const handleBriefClaude = async () => {
+    setBriefing("loading");
+    try {
+      const brief = await generateBrief({
+        projectName: projectContext.name || undefined,
+        projectDescription: projectContext.description || undefined,
+        stack: projectContext.stack || undefined,
+        targetUsers: projectContext.targetUsers || undefined,
+        sessionGoal: sessionGoal || undefined,
+        references: references.length
+          ? references.map((r) => ({ label: r.label, content: r.content }))
+          : undefined,
+      });
+      chrome.runtime.sendMessage({ type: "INJECT_BRIEF", text: brief });
+      setBriefing("done");
+    } catch {
+      // Silent fallback to plain-text template
+      chrome.runtime.sendMessage({ type: "INJECT_BRIEF", text: buildFallbackBrief() });
+      setBriefing("done");
+    }
     trackEvent("brief_claude_used");
-    setToast(true);
-    setTimeout(() => setToast(false), 2000);
+    setTimeout(() => setBriefing("idle"), 2000);
   };
 
   // Show onboarding if not complete or editing
@@ -236,9 +255,18 @@ const Context: React.FC = () => {
       {/* Brief Claude button */}
       <button
         onClick={handleBriefClaude}
-        className="w-full py-2.5 text-sm font-semibold rounded-xl bg-flint-accent text-white hover:bg-flint-accent-hover transition-colors"
+        disabled={briefing === "loading"}
+        className={`w-full py-2.5 text-sm font-semibold rounded-xl transition-colors ${
+          briefing === "loading"
+            ? "bg-flint-accent/70 text-white/80 cursor-wait animate-pulse"
+            : "bg-flint-accent text-white hover:bg-flint-accent-hover"
+        }`}
       >
-        {toast ? "Briefed! 🎯" : "✦ Brief Claude"}
+        {briefing === "loading"
+          ? "Crafting brief..."
+          : briefing === "done"
+            ? "Briefed! 🎯"
+            : "✦ Brief Claude"}
       </button>
     </div>
   );

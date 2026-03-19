@@ -8,6 +8,7 @@ export interface AnalysisResult {
 
 const FLINT_API_URL = "https://flint-backend-two.vercel.app/api/analyze";
 const FLINT_EVENT_URL = "https://flint-backend-two.vercel.app/api/event";
+export const FLINT_BRIEF_URL = "https://flint-backend-two.vercel.app/api/brief";
 const FLINT_API_KEY = "flint-ext-v2-2026";
 
 export async function trackEvent(event: string, value?: number): Promise<void> {
@@ -101,4 +102,26 @@ export async function analyzePrompt(prompt: string): Promise<AnalysisResult> {
 export async function improvePrompt(prompt: string): Promise<string | null> {
   const result = await analyzePrompt(prompt);
   return result.improved;
+}
+
+export async function generateBrief(context: {
+  projectName?: string;
+  projectDescription?: string;
+  stack?: string;
+  targetUsers?: string;
+  sessionGoal?: string;
+  references?: Array<{ label: string; content: string }>;
+}): Promise<string> {
+  const response = await fetch(FLINT_BRIEF_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-flint-key": FLINT_API_KEY,
+    },
+    body: JSON.stringify({ context }),
+  });
+  if (!response.ok) throw new Error("Failed to generate brief");
+  const data = await response.json() as any;
+  if (!data.brief) throw new Error("Empty brief");
+  return data.brief as string;
 }
