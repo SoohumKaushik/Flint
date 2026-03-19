@@ -34,6 +34,7 @@ const Dashboard: React.FC = () => {
   const dailyUsage = useFlintStore((s) => s.dailyUsage);
   const dailySessions = useFlintStore((s) => s.dailySessions);
   const promptHistory = useFlintStore((s) => s.promptHistory);
+  const currentSession = useFlintStore((s) => s.currentSession);
 
   // Compute average score from today's prompts
   const todayPrompts = promptHistory.filter(
@@ -46,6 +47,21 @@ const Dashboard: React.FC = () => {
 
   const scoreColor =
     avgScore >= 7 ? "text-flint-success" : avgScore >= 4 ? "text-flint-warning" : avgScore > 0 ? "text-flint-danger" : "text-flint-text-muted";
+
+  // Response quality
+  const responses = currentSession.responses || [];
+  const avgRelevance =
+    responses.length > 0
+      ? responses.reduce((sum, r) => sum + r.relevance, 0) / responses.length
+      : 0;
+  const relevanceColor =
+    avgRelevance >= 7 ? "text-flint-success" : avgRelevance >= 4 ? "text-flint-warning" : avgRelevance > 0 ? "text-flint-danger" : "text-flint-text-muted";
+
+  // Session alignment
+  const alignedCount = responses.filter(r => r.aligned).length;
+  const alignedPct = responses.length > 0 ? Math.round((alignedCount / responses.length) * 100) : 0;
+  const alignColor =
+    alignedPct >= 70 ? "text-flint-success" : alignedPct >= 40 ? "text-flint-warning" : alignedPct > 0 ? "text-flint-danger" : "text-flint-text-muted";
 
   // Usage progress (cap at 100 prompts as a soft daily limit visual)
   const usagePct = Math.min(100, (dailyUsage.promptCount / 100) * 100);
@@ -86,6 +102,37 @@ const Dashboard: React.FC = () => {
         </div>
         <p className="text-[10px] text-flint-text-muted mt-1">
           Average prompt quality today
+        </p>
+      </Card>
+
+      {/* Response Quality */}
+      <Card>
+        <span className="text-xs font-semibold text-flint-text-secondary">
+          Response Quality
+        </span>
+        <div className="flex items-baseline gap-1 mt-2">
+          <span className={`text-4xl font-bold ${relevanceColor}`}>
+            {avgRelevance > 0 ? avgRelevance.toFixed(1) : "—"}
+          </span>
+          <span className="text-xs text-flint-text-muted">/10</span>
+        </div>
+        <p className="text-[10px] text-flint-text-muted mt-1">
+          Avg Claude response relevance today
+        </p>
+      </Card>
+
+      {/* Session Alignment */}
+      <Card>
+        <span className="text-xs font-semibold text-flint-text-secondary">
+          Session Alignment
+        </span>
+        <div className="flex items-baseline gap-1 mt-2">
+          <span className={`text-4xl font-bold ${alignColor}`}>
+            {alignedPct > 0 ? `${alignedPct}%` : "—"}
+          </span>
+        </div>
+        <p className="text-[10px] text-flint-text-muted mt-1">
+          Responses aligned with today's goal
         </p>
       </Card>
 

@@ -9,6 +9,7 @@ export interface AnalysisResult {
 const FLINT_API_URL = "https://flint-backend-two.vercel.app/api/analyze";
 const FLINT_EVENT_URL = "https://flint-backend-two.vercel.app/api/event";
 export const FLINT_BRIEF_URL = "https://flint-backend-two.vercel.app/api/brief";
+const FLINT_ANALYZE_RESPONSE_URL = "https://flint-backend-two.vercel.app/api/analyze-response";
 const FLINT_API_KEY = "flint-ext-v2-2026";
 
 export async function trackEvent(event: string, value?: number): Promise<void> {
@@ -102,6 +103,39 @@ export async function analyzePrompt(prompt: string): Promise<AnalysisResult> {
 export async function improvePrompt(prompt: string): Promise<string | null> {
   const result = await analyzePrompt(prompt);
   return result.improved;
+}
+
+export interface ResponseAnalysis {
+  relevance: number;
+  aligned: boolean;
+  suggestion: string;
+}
+
+export async function analyzeResponse(
+  responseText: string,
+  context?: {
+    sessionGoal?: string;
+    projectName?: string;
+    projectDescription?: string;
+  }
+): Promise<ResponseAnalysis> {
+  const res = await fetch(FLINT_ANALYZE_RESPONSE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-flint-key": FLINT_API_KEY,
+    },
+    body: JSON.stringify({
+      response: responseText,
+      sessionGoal: context?.sessionGoal,
+      projectName: context?.projectName,
+      projectDescription: context?.projectDescription,
+    }),
+  });
+  if (!res.ok) throw new Error("Response analysis failed");
+  const data = await res.json() as any;
+  if (typeof data.relevance !== "number") throw new Error("Invalid response");
+  return data as ResponseAnalysis;
 }
 
 export async function generateBrief(context: {

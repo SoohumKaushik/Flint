@@ -15,6 +15,12 @@ function scoreColor(score: number): string {
   return "bg-flint-danger";
 }
 
+function responseColor(relevance: number): string {
+  if (relevance >= 7) return "bg-teal-400";
+  if (relevance >= 4) return "bg-yellow-400";
+  return "bg-red-400";
+}
+
 function scoreTextColor(score: number): string {
   if (score >= 7) return "text-flint-success";
   if (score >= 4) return "text-flint-warning";
@@ -81,7 +87,20 @@ const LiveSession: React.FC = () => {
     setTimeout(() => setResetToast(false), 1500);
   };
 
+  // Response quality
+  const responses = currentSession.responses || [];
+  const avgRelevance =
+    responses.length > 0
+      ? responses.reduce((s, r) => s + r.relevance, 0) / responses.length
+      : null;
+
+  // Drift detection
+  const lastThreeResponses = responses.slice(-3);
+  const driftingCount = lastThreeResponses.filter(r => !r.aligned || r.relevance < 5).length;
+  const isDrifting = lastThreeResponses.length >= 2 && driftingCount >= 2;
+
   const trailDots = entries.slice(-10);
+  const responseTrailDots = responses.slice(-10);
 
   return (
     <div className="bg-flint-card border border-flint-border rounded-xl p-3.5">
@@ -105,7 +124,7 @@ const LiveSession: React.FC = () => {
       )}
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-1.5 mb-2.5">
+      <div className="grid grid-cols-2 gap-1.5 mb-2.5">
         <div className="bg-flint-surface rounded-lg py-1.5 text-center">
           <p className="text-sm font-semibold text-flint-text-primary">
             {count}
@@ -132,27 +151,64 @@ const LiveSession: React.FC = () => {
           </p>
           <p className="text-[10px] text-flint-text-muted">Best</p>
         </div>
+        <div className="bg-flint-surface rounded-lg py-1.5 text-center">
+          <p
+            className={`text-sm font-semibold ${
+              avgRelevance !== null ? scoreTextColor(avgRelevance) : "text-flint-text-muted"
+            }`}
+          >
+            {avgRelevance !== null ? avgRelevance.toFixed(1) : "—"}
+          </p>
+          <p className="text-[10px] text-flint-text-muted">Response Qual</p>
+        </div>
       </div>
 
       {/* Score trail */}
       <div className="mb-2">
         <p className="text-[10px] text-flint-text-muted mb-1">Score trail</p>
         {trailDots.length > 0 ? (
-          <div className="flex gap-1 flex-wrap">
-            {trailDots.map((e, i) => (
-              <span
-                key={i}
-                title={String(e.score)}
-                className={`w-2.5 h-2.5 rounded-full ${scoreColor(e.score)}`}
-              />
-            ))}
+          <div>
+            <p className="text-[9px] text-flint-text-muted mb-0.5">Prompts</p>
+            <div className="flex gap-1 flex-wrap">
+              {trailDots.map((e, i) => (
+                <span
+                  key={i}
+                  title={String(e.score)}
+                  className={`w-2.5 h-2.5 rounded-full ${scoreColor(e.score)}`}
+                />
+              ))}
+            </div>
           </div>
         ) : (
           <p className="text-[10px] italic text-flint-text-muted">
             No prompts scored yet
           </p>
         )}
+        {responseTrailDots.length > 0 && (
+          <div className="mt-1.5">
+            <p className="text-[9px] text-flint-text-muted mb-0.5">Responses</p>
+            <div className="flex gap-1 flex-wrap">
+              {responseTrailDots.map((r, i) => (
+                <span
+                  key={i}
+                  title={String(r.relevance)}
+                  className={`w-2.5 h-2.5 rounded-full ${responseColor(r.relevance)}`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Drift warning */}
+      {isDrifting && (
+        <div className="mt-2 p-2.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+          <p className="text-[11px] text-yellow-400 font-medium">⚠️ Session may be drifting</p>
+          <p className="text-[10px] text-flint-text-muted mt-0.5">
+            {lastThreeResponses[lastThreeResponses.length - 1]?.suggestion || "Use 'On Track?' in the Actions tab to refocus."}
+          </p>
+        </div>
+      )}
 
       {/* Health + Reset */}
       <div className="flex items-center justify-between">

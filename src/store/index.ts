@@ -41,6 +41,14 @@ export interface SessionEntry {
   response?: string;
 }
 
+export interface ResponseEntry {
+  text: string;
+  relevance: number;
+  aligned: boolean;
+  suggestion: string;
+  timestamp: number;
+}
+
 interface FlintState {
   dailyUsage: DailyUsage;
   dailySessions: number;
@@ -52,7 +60,7 @@ interface FlintState {
   currentSession: {
     startTime: number;
     entries: SessionEntry[];
-    responses: string[];
+    responses: ResponseEntry[];
   };
 
   loadFromStorage: () => Promise<void>;
@@ -63,7 +71,7 @@ interface FlintState {
   removeReference: (id: string) => Promise<void>;
   startNewSession: () => Promise<void>;
   addSessionEntry: (entry: Omit<SessionEntry, "timestamp">) => Promise<void>;
-  addSessionResponse: (text: string) => Promise<void>;
+  addSessionResponse: (entry: ResponseEntry) => Promise<void>;
 }
 
 export const useFlintStore = create<FlintState>((set) => ({
@@ -167,7 +175,7 @@ export const useFlintStore = create<FlintState>((set) => ({
   },
 
   startNewSession: async () => {
-    const session = { startTime: Date.now(), entries: [] as SessionEntry[], responses: [] as string[] };
+    const session = { startTime: Date.now(), entries: [] as SessionEntry[], responses: [] as ResponseEntry[] };
     await chrome.storage.local.set({ currentSession: session }).catch(console.error);
     set({ currentSession: session });
   },
@@ -180,11 +188,11 @@ export const useFlintStore = create<FlintState>((set) => ({
     set({ currentSession: session });
   },
 
-  addSessionResponse: async (text: string) => {
+  addSessionResponse: async (entry: ResponseEntry) => {
     const { currentSession } = await chrome.storage.local.get("currentSession");
     const session = currentSession || { startTime: Date.now(), entries: [], responses: [] };
     session.responses = session.responses || [];
-    session.responses.push(text);
+    session.responses.push(entry);
     if (session.responses.length > 20) session.responses = session.responses.slice(-20);
     await chrome.storage.local.set({ currentSession: session }).catch(console.error);
     set({ currentSession: session });

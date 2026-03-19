@@ -51,13 +51,43 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === "ADD_RESPONSE" && message.text) {
-    chrome.storage.local.get("currentSession").then((data) => {
+    (async () => {
+      const data = await chrome.storage.local.get(["currentSession", "projectContext", "sessionGoal"]);
       const session = data.currentSession || { startTime: Date.now(), entries: [], responses: [] };
       session.responses = session.responses || [];
-      session.responses.push(message.text);
+
+      let entry: { text: string; relevance: number; aligned: boolean; suggestion: string; timestamp: number };
+      try {
+        const ctx = data.projectContext;
+        const res = await fetch("https://flint-backend-two.vercel.app/api/analyze-response", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-flint-key": "flint-ext-v2-2026",
+          },
+          body: JSON.stringify({
+            response: message.text,
+            sessionGoal: data.sessionGoal || "",
+            projectName: ctx?.name || "",
+            projectDescription: ctx?.description || "",
+          }),
+        });
+        const json = await res.json() as any;
+        entry = {
+          text: message.text,
+          relevance: typeof json.relevance === "number" ? json.relevance : 5,
+          aligned: typeof json.aligned === "boolean" ? json.aligned : true,
+          suggestion: json.suggestion || "",
+          timestamp: Date.now(),
+        };
+      } catch {
+        entry = { text: message.text, relevance: 5, aligned: true, suggestion: "", timestamp: Date.now() };
+      }
+
+      session.responses.push(entry);
       if (session.responses.length > 20) session.responses = session.responses.slice(-20);
-      return chrome.storage.local.set({ currentSession: session });
-    }).catch(console.error);
+      await chrome.storage.local.set({ currentSession: session }).catch(console.error);
+    })();
     return false;
   }
 
