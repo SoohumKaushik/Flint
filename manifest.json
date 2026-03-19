@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Flint — AI Usage Guardian",
   "description": "Score and improve your Claude prompts in real time. Project context, session tracking, and one-click rewrites — so Claude gets what you want.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "icons": {
     "16": "public/icons/icon-16.png",
     "48": "public/icons/icon-48.png",
