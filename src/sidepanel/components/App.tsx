@@ -4,11 +4,13 @@ import Context from "./Context";
 import Dashboard from "./Dashboard";
 import PromptHistory from "./PromptHistory";
 import Settings from "./Settings";
+import Actions from "./Actions";
 
-type Tab = "context" | "overview" | "history" | "settings";
+type Tab = "context" | "actions" | "overview" | "history" | "settings";
 
 const tabs: { key: Tab; label: string }[] = [
   { key: "context", label: "Context" },
+  { key: "actions", label: "Actions" },
   { key: "overview", label: "Overview" },
   { key: "history", label: "History" },
   { key: "settings", label: "Settings" },
@@ -60,6 +62,7 @@ const App: React.FC = () => {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === "context" && <Context />}
+        {activeTab === "actions" && <Actions />}
         {activeTab === "overview" && <Dashboard />}
         {activeTab === "history" && <PromptHistory />}
         {activeTab === "settings" && <Settings />}

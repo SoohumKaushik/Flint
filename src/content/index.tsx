@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import ContextMeter from "./components/ContextMeter";
 import PromptAnalyzer from "./components/PromptAnalyzer";
 import { mountContextMeter, mountPromptAnalyzer, setInputText } from "./injector";
+import { startResponseObserver } from "./responseObserver";
 
 function init() {
   // Mount context meter
@@ -46,6 +47,9 @@ function init() {
       payload: { sessionId },
     }).catch(() => {});
   });
+
+  // Start response observer
+  startResponseObserver();
 
   // Listen for text injection from background
   chrome.runtime.onMessage.addListener((msg) => {

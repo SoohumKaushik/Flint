@@ -38,6 +38,7 @@ export interface SessionEntry {
   prompt: string;
   score: number;
   timestamp: number;
+  response?: string;
 }
 
 interface FlintState {
@@ -51,6 +52,7 @@ interface FlintState {
   currentSession: {
     startTime: number;
     entries: SessionEntry[];
+    responses: string[];
   };
 
   loadFromStorage: () => Promise<void>;
@@ -61,6 +63,7 @@ interface FlintState {
   removeReference: (id: string) => Promise<void>;
   startNewSession: () => Promise<void>;
   addSessionEntry: (entry: Omit<SessionEntry, "timestamp">) => Promise<void>;
+  addSessionResponse: (text: string) => Promise<void>;
 }
 
 export const useFlintStore = create<FlintState>((set) => ({
@@ -81,7 +84,7 @@ export const useFlintStore = create<FlintState>((set) => ({
   },
   sessionGoal: "",
   references: [],
-  currentSession: { startTime: Date.now(), entries: [] },
+  currentSession: { startTime: Date.now(), entries: [], responses: [] },
 
   loadFromStorage: async () => {
     const data = await chrome.storage.local.get([
@@ -118,7 +121,7 @@ export const useFlintStore = create<FlintState>((set) => ({
       },
       sessionGoal: data.sessionGoal || "",
       references: data.references || [],
-      currentSession: data.currentSession || { startTime: Date.now(), entries: [] },
+      currentSession: data.currentSession || { startTime: Date.now(), entries: [], responses: [] },
     });
   },
 
@@ -164,15 +167,25 @@ export const useFlintStore = create<FlintState>((set) => ({
   },
 
   startNewSession: async () => {
-    const session = { startTime: Date.now(), entries: [] };
+    const session = { startTime: Date.now(), entries: [] as SessionEntry[], responses: [] as string[] };
     await chrome.storage.local.set({ currentSession: session }).catch(console.error);
     set({ currentSession: session });
   },
 
   addSessionEntry: async (entry) => {
     const { currentSession } = await chrome.storage.local.get("currentSession");
-    const session = currentSession || { startTime: Date.now(), entries: [] };
+    const session = currentSession || { startTime: Date.now(), entries: [], responses: [] };
     session.entries.push({ ...entry, timestamp: Date.now() });
+    await chrome.storage.local.set({ currentSession: session }).catch(console.error);
+    set({ currentSession: session });
+  },
+
+  addSessionResponse: async (text: string) => {
+    const { currentSession } = await chrome.storage.local.get("currentSession");
+    const session = currentSession || { startTime: Date.now(), entries: [], responses: [] };
+    session.responses = session.responses || [];
+    session.responses.push(text);
+    if (session.responses.length > 20) session.responses = session.responses.slice(-20);
     await chrome.storage.local.set({ currentSession: session }).catch(console.error);
     set({ currentSession: session });
   },

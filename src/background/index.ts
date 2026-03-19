@@ -50,6 +50,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
+  if (message.type === "ADD_RESPONSE" && message.text) {
+    chrome.storage.local.get("currentSession").then((data) => {
+      const session = data.currentSession || { startTime: Date.now(), entries: [], responses: [] };
+      session.responses = session.responses || [];
+      session.responses.push(message.text);
+      if (session.responses.length > 20) session.responses = session.responses.slice(-20);
+      return chrome.storage.local.set({ currentSession: session });
+    }).catch(console.error);
+    return false;
+  }
+
   if (message.type === "OPEN_SIDE_PANEL" && sender.tab?.id) {
     chrome.sidePanel.open({ tabId: sender.tab.id });
   }
