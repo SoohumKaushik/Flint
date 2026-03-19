@@ -44,7 +44,7 @@ const MiniChart: React.FC<MiniChartProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <p className="text-[10px] text-flint-text-muted mb-1">{label}</p>
+        <p className="text-xs text-flint-text-muted mb-1">{label}</p>
       )}
       <svg
         width="100%"

@@ -69,7 +69,7 @@ const App: React.FC = () => {
         {canScrollLeft && (
           <button
             onClick={() => scrollTabs("left")}
-            className="px-1.5 py-2 text-flint-text-muted hover:text-flint-accent shrink-0 transition-colors"
+            className="flex items-center justify-center w-6 h-6 shrink-0 rounded-md bg-flint-surface border border-flint-border text-flint-text-secondary hover:text-flint-accent hover:border-flint-accent transition-colors text-sm font-bold ml-1"
           >
             ‹
           </button>
@@ -85,7 +85,7 @@ const App: React.FC = () => {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-3 py-2 text-xs font-semibold transition-colors relative whitespace-nowrap shrink-0 ${
+              className={`px-3 py-2 text-[11px] font-semibold transition-colors relative whitespace-nowrap shrink-0 ${
                 activeTab === tab.key
                   ? "text-flint-accent"
                   : "text-flint-text-muted hover:text-flint-text-secondary"
@@ -103,7 +103,7 @@ const App: React.FC = () => {
         {canScrollRight && (
           <button
             onClick={() => scrollTabs("right")}
-            className="px-1.5 py-2 text-flint-text-muted hover:text-flint-accent shrink-0 transition-colors"
+            className="flex items-center justify-center w-6 h-6 shrink-0 rounded-md bg-flint-surface border border-flint-border text-flint-text-secondary hover:text-flint-accent hover:border-flint-accent transition-colors text-sm font-bold mr-1"
           >
             ›
           </button>

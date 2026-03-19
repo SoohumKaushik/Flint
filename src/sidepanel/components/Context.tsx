@@ -115,7 +115,7 @@ const Context: React.FC = () => {
       {/* Project DNA */}
       <div className="bg-flint-card border border-flint-border rounded-xl p-3.5">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-flint-text-secondary uppercase tracking-wider">
+          <span className="text-xs font-semibold text-flint-text-secondary uppercase tracking-widest">
             Project DNA
           </span>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -158,7 +158,7 @@ const Context: React.FC = () => {
 
       {/* Today's Goal */}
       <div className="bg-flint-card border border-flint-border rounded-xl p-3.5">
-        <span className="text-xs font-semibold text-flint-text-secondary uppercase tracking-wider block mb-2">
+        <span className="text-xs font-semibold text-flint-text-secondary uppercase tracking-widest block mb-2">
           Today's Goal
         </span>
         <textarea
@@ -173,7 +173,7 @@ const Context: React.FC = () => {
       {/* References */}
       <div className="bg-flint-card border border-flint-border rounded-xl p-3.5">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-flint-text-secondary uppercase tracking-wider">
+          <span className="text-xs font-semibold text-flint-text-secondary uppercase tracking-widest">
             References
           </span>
           {references.length < 5 && (
@@ -195,7 +195,7 @@ const Context: React.FC = () => {
               <p className="text-xs font-medium text-flint-text-primary truncate">
                 {ref.label}
               </p>
-              <p className="text-[10px] text-flint-text-muted truncate">
+              <p className="text-[11px] text-flint-text-muted truncate">
                 {ref.content}
               </p>
             </div>
@@ -246,7 +246,7 @@ const Context: React.FC = () => {
         )}
 
         {references.length === 0 && !showRefForm && (
-          <p className="text-[10px] text-flint-text-muted">
+          <p className="text-[11px] text-flint-text-muted">
             Add URLs or notes for Claude to reference.
           </p>
         )}

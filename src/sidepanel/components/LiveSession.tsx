@@ -118,7 +118,7 @@ const LiveSession: React.FC = () => {
       {/* Session goal */}
       {sessionGoal && (
         <div className="border-l-2 border-flint-accent pl-2 mb-2.5">
-          <p className="text-[10px] italic text-flint-text-muted truncate">
+          <p className="text-[11px] italic text-flint-text-muted truncate">
             {sessionGoal}
           </p>
         </div>
@@ -127,40 +127,40 @@ const LiveSession: React.FC = () => {
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-1.5 mb-2.5">
         <div className="bg-flint-surface rounded-lg py-1.5 text-center">
-          <p className="text-sm font-semibold text-flint-text-primary">
+          <p className="text-base font-semibold text-flint-text-primary">
             {count}
           </p>
-          <p className="text-[10px] text-flint-text-muted">Prompts</p>
+          <p className="text-[11px] text-flint-text-muted">Prompts</p>
         </div>
         <div className="bg-flint-surface rounded-lg py-1.5 text-center">
           <p
-            className={`text-sm font-semibold ${
+            className={`text-base font-semibold ${
               avg !== null ? scoreTextColor(avg) : "text-flint-text-muted"
             }`}
           >
             {avg !== null ? avg.toFixed(1) : "—"}
           </p>
-          <p className="text-[10px] text-flint-text-muted">Avg Score</p>
+          <p className="text-[11px] text-flint-text-muted">Avg Score</p>
         </div>
         <div className="bg-flint-surface rounded-lg py-1.5 text-center">
           <p
-            className={`text-sm font-semibold ${
+            className={`text-base font-semibold ${
               best !== null ? scoreTextColor(best) : "text-flint-text-muted"
             }`}
           >
             {best !== null ? best : "—"}
           </p>
-          <p className="text-[10px] text-flint-text-muted">Best</p>
+          <p className="text-[11px] text-flint-text-muted">Best</p>
         </div>
         <div className="bg-flint-surface rounded-lg py-1.5 text-center">
           <p
-            className={`text-sm font-semibold ${
+            className={`text-base font-semibold ${
               avgRelevance !== null ? scoreTextColor(avgRelevance) : "text-flint-text-muted"
             }`}
           >
             {avgRelevance !== null ? avgRelevance.toFixed(1) : "—"}
           </p>
-          <p className="text-[10px] text-flint-text-muted">Response Qual</p>
+          <p className="text-[11px] text-flint-text-muted">Res. Quality</p>
         </div>
       </div>
 
@@ -190,7 +190,7 @@ const LiveSession: React.FC = () => {
       {isDrifting && (
         <div className="mt-2 p-2.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
           <p className="text-[11px] text-yellow-400 font-medium">⚠️ Session may be drifting</p>
-          <p className="text-[10px] text-flint-text-muted mt-0.5">
+          <p className="text-[11px] text-flint-text-muted mt-0.5">
             {lastThreeResponses[lastThreeResponses.length - 1]?.suggestion || "Use 'On Track?' in the Actions tab to refocus."}
           </p>
         </div>
@@ -201,7 +201,7 @@ const LiveSession: React.FC = () => {
         <div>{healthLabel}</div>
         <button
           onClick={handleReset}
-          className="text-[10px] text-flint-text-muted hover:text-flint-accent transition-colors"
+          className="text-[11px] text-flint-text-muted hover:text-flint-accent transition-colors"
         >
           {resetToast ? "Session reset" : "New Session"}
         </button>

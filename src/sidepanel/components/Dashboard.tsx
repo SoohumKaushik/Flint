@@ -85,7 +85,7 @@ const Dashboard: React.FC = () => {
             style={{ width: `${usagePct}%` }}
           />
         </div>
-        <p className="text-[10px] text-flint-text-muted mt-1.5">
+        <p className="text-[11px] text-flint-text-muted mt-1.5">
           ~{dailyUsage.totalTokens.toLocaleString()} credits used today
         </p>
       </Card>
@@ -101,7 +101,7 @@ const Dashboard: React.FC = () => {
           </span>
           <span className="text-xs text-flint-text-muted">/10</span>
         </div>
-        <p className="text-[10px] text-flint-text-muted mt-1">
+        <p className="text-[11px] text-flint-text-muted mt-1">
           Average prompt quality today
         </p>
       </Card>
@@ -117,7 +117,7 @@ const Dashboard: React.FC = () => {
           </span>
           <span className="text-xs text-flint-text-muted">/10</span>
         </div>
-        <p className="text-[10px] text-flint-text-muted mt-1">
+        <p className="text-[11px] text-flint-text-muted mt-1">
           Avg Claude response relevance today
         </p>
         {(() => {
@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
             {alignedPct > 0 ? `${alignedPct}%` : "—"}
           </span>
         </div>
-        <p className="text-[10px] text-flint-text-muted mt-1">
+        <p className="text-[11px] text-flint-text-muted mt-1">
           Responses aligned with today's goal
         </p>
       </Card>
@@ -168,7 +168,7 @@ const Dashboard: React.FC = () => {
                 showDots={trendScores.length <= 7}
               />
             </div>
-            <p className="text-[10px] text-flint-text-muted mt-1">
+            <p className="text-[11px] text-flint-text-muted mt-1">
               Last {trendScores.length} prompts
             </p>
           </Card>
@@ -185,7 +185,7 @@ const Dashboard: React.FC = () => {
             {dailySessions}
           </span>
         </div>
-        <p className="text-[10px] text-flint-text-muted mt-1">
+        <p className="text-[11px] text-flint-text-muted mt-1">
           Conversations today
         </p>
       </Card>
