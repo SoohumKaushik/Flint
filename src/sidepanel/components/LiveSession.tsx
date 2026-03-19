@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useFlintStore } from "../../store";
+import MiniChart from "./MiniChart";
 
 function formatElapsed(ms: number): string {
   const totalMin = Math.floor(ms / 60000);
@@ -99,8 +100,8 @@ const LiveSession: React.FC = () => {
   const driftingCount = lastThreeResponses.filter(r => !r.aligned || r.relevance < 5).length;
   const isDrifting = lastThreeResponses.length >= 2 && driftingCount >= 2;
 
-  const trailDots = entries.slice(-10);
-  const responseTrailDots = responses.slice(-10);
+  const promptScores = entries.slice(-10).map((e) => e.score);
+  const responseScores = (currentSession.responses || []).slice(-10).map((r: any) => r.relevance ?? 5);
 
   return (
     <div className="bg-flint-card border border-flint-border rounded-xl p-3.5">
@@ -164,41 +165,26 @@ const LiveSession: React.FC = () => {
       </div>
 
       {/* Score trail */}
-      <div className="mb-2">
-        <p className="text-[10px] text-flint-text-muted mb-1">Score trail</p>
-        {trailDots.length > 0 ? (
-          <div>
-            <p className="text-[9px] text-flint-text-muted mb-0.5">Prompts</p>
-            <div className="flex gap-1 flex-wrap">
-              {trailDots.map((e, i) => (
-                <span
-                  key={i}
-                  title={String(e.score)}
-                  className={`w-2.5 h-2.5 rounded-full ${scoreColor(e.score)}`}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p className="text-[10px] italic text-flint-text-muted">
-            No prompts scored yet
-          </p>
-        )}
-        {responseTrailDots.length > 0 && (
-          <div className="mt-1.5">
-            <p className="text-[9px] text-flint-text-muted mb-0.5">Responses</p>
-            <div className="flex gap-1 flex-wrap">
-              {responseTrailDots.map((r, i) => (
-                <span
-                  key={i}
-                  title={String(r.relevance)}
-                  className={`w-2.5 h-2.5 rounded-full ${responseColor(r.relevance)}`}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      {(promptScores.length > 0 || responseScores.length > 0) && (
+        <div className="mb-2 flex flex-col gap-2">
+          {promptScores.length > 0 && (
+            <MiniChart
+              data={promptScores}
+              color="#8B5CF6"
+              label="Prompt scores"
+              height={36}
+            />
+          )}
+          {responseScores.length > 0 && (
+            <MiniChart
+              data={responseScores}
+              color="#2DD4BF"
+              label="Response quality"
+              height={36}
+            />
+          )}
+        </div>
+      )}
 
       {/* Drift warning */}
       {isDrifting && (

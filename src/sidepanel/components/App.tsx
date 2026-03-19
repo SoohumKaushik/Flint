@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useFlintStore } from "../../store";
 import Context from "./Context";
 import Dashboard from "./Dashboard";
@@ -20,6 +20,17 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>("context");
   const loadFromStorage = useFlintStore((s) => s.loadFromStorage);
 
+  const tabScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = () => {
+    const el = tabScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
   useEffect(() => {
     loadFromStorage();
 
@@ -28,6 +39,19 @@ const App: React.FC = () => {
     chrome.storage.onChanged.addListener(handler);
     return () => chrome.storage.onChanged.removeListener(handler);
   }, [loadFromStorage]);
+
+  useEffect(() => {
+    updateScrollState();
+    const el = tabScrollRef.current;
+    if (el) el.addEventListener("scroll", updateScrollState);
+    return () => { if (el) el.removeEventListener("scroll", updateScrollState); };
+  }, []);
+
+  const scrollTabs = (dir: "left" | "right") => {
+    const el = tabScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
+  };
 
   return (
     <div className="min-h-screen bg-flint-bg flex flex-col">
@@ -40,23 +64,50 @@ const App: React.FC = () => {
       </div>
 
       {/* Tab bar */}
-      <div className="flex border-b border-flint-border px-4 gap-1">
-        {tabs.map((tab) => (
+      <div className="flex items-center border-b border-flint-border">
+        {/* Left arrow */}
+        {canScrollLeft && (
           <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-3 py-2 text-xs font-semibold transition-colors relative ${
-              activeTab === tab.key
-                ? "text-flint-accent"
-                : "text-flint-text-muted hover:text-flint-text-secondary"
-            }`}
+            onClick={() => scrollTabs("left")}
+            className="px-1.5 py-2 text-flint-text-muted hover:text-flint-accent shrink-0 transition-colors"
           >
-            {tab.label}
-            {activeTab === tab.key && (
-              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-flint-accent rounded-full" />
-            )}
+            ‹
           </button>
-        ))}
+        )}
+
+        {/* Scrollable tab strip */}
+        <div
+          ref={tabScrollRef}
+          className="flex overflow-x-auto scrollbar-hide flex-1 px-2 gap-0.5"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-3 py-2 text-xs font-semibold transition-colors relative whitespace-nowrap shrink-0 ${
+                activeTab === tab.key
+                  ? "text-flint-accent"
+                  : "text-flint-text-muted hover:text-flint-text-secondary"
+              }`}
+            >
+              {tab.label}
+              {activeTab === tab.key && (
+                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-flint-accent rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Right arrow */}
+        {canScrollRight && (
+          <button
+            onClick={() => scrollTabs("right")}
+            className="px-1.5 py-2 text-flint-text-muted hover:text-flint-accent shrink-0 transition-colors"
+          >
+            ›
+          </button>
+        )}
       </div>
 
       {/* Content */}

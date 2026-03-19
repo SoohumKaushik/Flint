@@ -1,5 +1,6 @@
 import React from "react";
 import { useFlintStore } from "../../store";
+import MiniChart from "./MiniChart";
 
 const DAILY_TIPS = [
   "Start with what you want to build, not how to build it.",
@@ -119,6 +120,21 @@ const Dashboard: React.FC = () => {
         <p className="text-[10px] text-flint-text-muted mt-1">
           Avg Claude response relevance today
         </p>
+        {(() => {
+          const responseTrend = ((currentSession.responses || []) as any[])
+            .slice(-14)
+            .map((r) => r.relevance ?? 5);
+          return responseTrend.length > 1 ? (
+            <div className="mt-2">
+              <MiniChart
+                data={responseTrend}
+                color="#2DD4BF"
+                height={40}
+                showDots={responseTrend.length <= 7}
+              />
+            </div>
+          ) : null;
+        })()}
       </Card>
 
       {/* Session Alignment */}
@@ -137,30 +153,27 @@ const Dashboard: React.FC = () => {
       </Card>
 
       {/* Score Trend */}
-      {promptHistory.length > 0 && (
-        <Card>
-          <span className="text-xs font-semibold text-flint-text-secondary">
-            Score Trend
-          </span>
-          <div className="flex items-center gap-1.5 mt-2">
-            {promptHistory.slice(0, 7).map((p, i) => (
-              <div
-                key={i}
-                className={`w-2.5 h-2.5 rounded-full ${
-                  p.score >= 7
-                    ? "bg-flint-success"
-                    : p.score >= 4
-                      ? "bg-flint-warning"
-                      : "bg-flint-danger"
-                }`}
+      {(() => {
+        const trendScores = promptHistory.slice(0, 14).reverse().map((p) => p.score);
+        return trendScores.length > 0 ? (
+          <Card>
+            <span className="text-xs font-semibold text-flint-text-secondary">
+              Score Trend
+            </span>
+            <div className="mt-2">
+              <MiniChart
+                data={trendScores}
+                color="#8B5CF6"
+                height={48}
+                showDots={trendScores.length <= 7}
               />
-            ))}
-          </div>
-          <p className="text-[10px] text-flint-text-muted mt-1.5">
-            Last {Math.min(promptHistory.length, 7)} prompts
-          </p>
-        </Card>
-      )}
+            </div>
+            <p className="text-[10px] text-flint-text-muted mt-1">
+              Last {trendScores.length} prompts
+            </p>
+          </Card>
+        ) : null;
+      })()}
 
       {/* Sessions */}
       <Card>
